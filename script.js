@@ -3,51 +3,51 @@ const htmlOutput = document.getElementById("html-output");
 const preview = document.getElementById("preview");
 
 mdInput.addEventListener("input", () => {
-  htmlOutput.innerText = convertMarkdown();
-  preview.innerHTML = convertMarkdown();
+  const converted = convertMarkdown();
+  htmlOutput.innerText = converted;
+  preview.innerHTML = converted;
 });
 
 function convertMarkdown() {
-  const markdown = mdInput.value;
-  const headingRegex = /^(#{1,3})\s+(.*)/gm;
-  let html = markdown.replace(headingRegex, (_, level, content) => {
-    level = level.length;
-    return `<h${level}>${content}</h${level}>`;
+  let markdown = mdInput.value;
+
+  // Escape HTML (basic security)
+  markdown = markdown
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  // Headings
+  markdown = markdown.replace(/^(#{1,6})\s+(.*)/gm, (_, level, content) => {
+    return `<h${level.length}>${content}</h${level.length}>`;
   });
 
-  const boldRegex = /\*\*(.+)\*\*/gm;
-  html = html.replace(boldRegex, (_, content) => {
-    return `<strong>${content}</strong>`;
-  });
+  // Bold
+  markdown = markdown.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  markdown = markdown.replace(/__(.*?)__/g, "<strong>$1</strong>");
 
-  const boldRegex2 = /__(.+)__/gm;
-  html = html.replace(boldRegex2, (_, content) => {
-    return `<strong>${content}</strong>`;
-  });
+  // Italic (AFTER bold to avoid conflicts)
+  markdown = markdown.replace(/\*(.*?)\*/g, "<em>$1</em>");
+  markdown = markdown.replace(/_(.*?)_/g, "<em>$1</em>");
 
-  const italicsRegex1 = /\*(.+)\*/gm;
-  html = html.replace(italicsRegex1, (_, content) => {
-    return `<em>${content}</em>`;
-  });
+  // Inline code
+  markdown = markdown.replace(/`(.*?)`/g, "<code>$1</code>");
 
-  const italicsRegex2 = /_(.+)_/gm;
-  html = html.replace(italicsRegex2, (_, content) => {
-    return `<em>${content}</em>`;
-  });
+  // Images
+  markdown = markdown.replace(/!\[(.*?)\]\((.*?)\)/g, '<img alt="$1" src="$2">');
 
-  const imgRegex = /!\[(.+)\]\((.+)\)/gm;
-  html = html.replace(imgRegex, (_, alt, src) => {
-    return `<img alt=${`"${alt}"`} src=${`"${src}"`}>`;
-  });
+  // Links
+  markdown = markdown.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>');
 
-  const linkRegex = /\[(.+)\]\((.+)\)/gm;
-  html = html.replace(linkRegex, (_, text, href) => {
-    return `<a href=${`"${href}"`}>${text}</a>`;
-  });
+  // Blockquotes
+  markdown = markdown.replace(/^>\s+(.*)/gm, "<blockquote>$1</blockquote>");
 
-  const blockquoteRegex = /^>\s+(.+)/gm;
-  html = html.replace(blockquoteRegex, (_, content) => {
-    return `<blockquote>${content}</blockquote>`;
-  });
-  return html;
+  // Lists
+  markdown = markdown.replace(/^\s*-\s+(.*)/gm, "<li>$1</li>");
+  markdown = markdown.replace(/(<li>.*<\/li>)/gms, "<ul>$1</ul>");
+
+  // Line breaks
+  markdown = markdown.replace(/\n/g, "<br>");
+
+  return markdown;
 }
