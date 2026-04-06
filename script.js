@@ -11,7 +11,7 @@ mdInput.addEventListener("input", () => {
 function convertMarkdown() {
   let markdown = mdInput.value;
 
-  // Escape HTML (basic security)
+  // Escape HTML 
   markdown = markdown
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
